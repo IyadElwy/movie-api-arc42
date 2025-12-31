@@ -3,7 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.business.services import MovieService
-from app.api.schemas import MovieCreate, MovieUpdate, MovieResponse, ActorResponse, RatingResponse
+from app.api.schemas import (
+    MovieCreate,
+    MovieUpdate,
+    MovieResponse,
+    ActorResponse,
+    RatingResponse,
+)
+from app.api.decorators import handle_not_found
 
 router = APIRouter(prefix="/movies", tags=["movies"])
 
@@ -16,7 +23,7 @@ def convert_movie_to_response(movie, service: MovieService) -> MovieResponse:
             last_name=actor.last_name,
             full_name=f"{actor.first_name} {actor.last_name}",
             birth_date=actor.birth_date,
-            nationality=actor.nationality
+            nationality=actor.nationality,
         )
         for actor in movie.actors
     ]
@@ -26,7 +33,7 @@ def convert_movie_to_response(movie, service: MovieService) -> MovieResponse:
             id=rating.id,
             score=rating.score,
             review_text=rating.review_text,
-            reviewer_email=rating.reviewer_email
+            reviewer_email=rating.reviewer_email,
         )
         for rating in movie.ratings
     ]
@@ -39,12 +46,12 @@ def convert_movie_to_response(movie, service: MovieService) -> MovieResponse:
         synopsis=movie.synopsis,
         poster_url=movie.poster_url,
         language=movie.language,
-        genres=movie.genres.split(',') if movie.genres else [],
+        genres=movie.genres.split(",") if movie.genres else [],
         budget=movie.budget,
         revenue=movie.revenue,
         actors=actors_response,
         ratings=ratings_response,
-        average_rating=service.calculate_average_rating(movie)
+        average_rating=service.calculate_average_rating(movie),
     )
 
 
@@ -56,15 +63,11 @@ def get_movies(db: Session = Depends(get_db)):
 
 
 @router.get("/{movie_id}", response_model=MovieResponse)
+@handle_not_found("Movie")
 def get_movie(movie_id: int, db: Session = Depends(get_db)):
     service = MovieService(db)
     movie = service.get_movie_by_id(movie_id)
-    if not movie:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Movie with id {movie_id} not found"
-        )
-    return convert_movie_to_response(movie, service)
+    return movie
 
 
 @router.post("", response_model=MovieResponse, status_code=status.HTTP_201_CREATED)
@@ -81,7 +84,7 @@ def create_movie(movie_data: MovieCreate, db: Session = Depends(get_db)):
         genres=movie_data.genres,
         budget=movie_data.budget,
         revenue=movie_data.revenue,
-        actor_ids=movie_data.actor_ids
+        actor_ids=movie_data.actor_ids,
     )
 
     return convert_movie_to_response(movie, service)
@@ -102,13 +105,13 @@ def update_movie(movie_id: int, movie_data: MovieUpdate, db: Session = Depends(g
         genres=movie_data.genres,
         budget=movie_data.budget,
         revenue=movie_data.revenue,
-        actor_ids=movie_data.actor_ids
+        actor_ids=movie_data.actor_ids,
     )
 
     if not movie:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Movie with id {movie_id} not found"
+            detail=f"Movie with id {movie_id} not found",
         )
 
     return convert_movie_to_response(movie, service)
@@ -121,5 +124,5 @@ def delete_movie(movie_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Movie with id {movie_id} not found"
+            detail=f"Movie with id {movie_id} not found",
         )
