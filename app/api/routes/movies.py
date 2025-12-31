@@ -10,7 +10,6 @@ from app.api.schemas import (
     ActorResponse,
     RatingResponse,
 )
-from app.api.decorators import handle_not_found
 
 router = APIRouter(prefix="/movies", tags=["movies"])
 
@@ -63,11 +62,15 @@ def get_movies(db: Session = Depends(get_db)):
 
 
 @router.get("/{movie_id}", response_model=MovieResponse)
-@handle_not_found("Movie")
 def get_movie(movie_id: int, db: Session = Depends(get_db)):
     service = MovieService(db)
     movie = service.get_movie_by_id(movie_id)
-    return movie
+    if not movie:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Movie with id {movie_id} not found",
+        )
+    return convert_movie_to_response(movie, service)
 
 
 @router.post("", response_model=MovieResponse, status_code=status.HTTP_201_CREATED)
