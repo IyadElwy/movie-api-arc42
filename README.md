@@ -159,13 +159,14 @@ Once running, access the interactive API documentation at:
 
 ### Movies
 
-| Method | Endpoint | Description | Status Codes |
-|--------|----------|-------------|--------------|
-| GET | `/movies` | Get all movies | 200 OK |
-| GET | `/movies/{id}` | Get a specific movie | 200 OK, 404 Not Found |
-| POST | `/movies` | Create a new movie | 201 Created |
-| PUT | `/movies/{id}` | Update a movie | 200 OK, 404 Not Found |
-| DELETE | `/movies/{id}` | Delete a movie | 204 No Content, 404 Not Found |
+
+| Method | Endpoint       | Description          | Status Codes                  |
+| ------ | -------------- | -------------------- | ----------------------------- |
+| GET    | `/movies`      | Get all movies       | 200 OK                        |
+| GET    | `/movies/{id}` | Get a specific movie | 200 OK, 404 Not Found         |
+| POST   | `/movies`      | Create a new movie   | 201 Created                   |
+| PUT    | `/movies/{id}` | Update a movie       | 200 OK, 404 Not Found         |
+| DELETE | `/movies/{id}` | Delete a movie       | 204 No Content, 404 Not Found |
 
 #### Movie Response Schema
 
@@ -205,13 +206,13 @@ Once running, access the interactive API documentation at:
 
 ### Actors
 
-| Method | Endpoint | Description | Status Codes |
-|--------|----------|-------------|--------------|
-| GET | `/actors` | Get all actors | 200 OK |
-| GET | `/actors/{id}` | Get a specific actor | 200 OK, 404 Not Found |
-| POST | `/actors` | Create a new actor | 201 Created |
-| PUT | `/actors/{id}` | Update an actor | 200 OK, 404 Not Found |
-| DELETE | `/actors/{id}` | Delete an actor | 204 No Content, 404 Not Found |
+| Method | Endpoint       | Description          | Status Codes                  |
+| ------ | -------------- | -------------------- | ----------------------------- |
+| GET    | `/actors`      | Get all actors       | 200 OK                        |
+| GET    | `/actors/{id}` | Get a specific actor | 200 OK, 404 Not Found         |
+| POST   | `/actors`      | Create a new actor   | 201 Created                   |
+| PUT    | `/actors/{id}` | Update an actor      | 200 OK, 404 Not Found         |
+| DELETE | `/actors/{id}` | Delete an actor      | 204 No Content, 404 Not Found |
 
 #### Actor Response Schema
 
@@ -228,13 +229,13 @@ Once running, access the interactive API documentation at:
 
 ### Ratings
 
-| Method | Endpoint | Description | Status Codes |
-|--------|----------|-------------|--------------|
-| GET | `/ratings` | Get all ratings | 200 OK |
-| GET | `/ratings/{id}` | Get a specific rating | 200 OK, 404 Not Found |
-| POST | `/ratings` | Create a new rating | 201 Created, 404 Not Found (if movie doesn't exist) |
-| PUT | `/ratings/{id}` | Update a rating | 200 OK, 404 Not Found |
-| DELETE | `/ratings/{id}` | Delete a rating | 204 No Content, 404 Not Found |
+| Method | Endpoint        | Description           | Status Codes                                        |
+| ------ | --------------- | --------------------- | --------------------------------------------------- |
+| GET    | `/ratings`      | Get all ratings       | 200 OK                                              |
+| GET    | `/ratings/{id}` | Get a specific rating | 200 OK, 404 Not Found                               |
+| POST   | `/ratings`      | Create a new rating   | 201 Created, 404 Not Found (if movie doesn't exist) |
+| PUT    | `/ratings/{id}` | Update a rating       | 200 OK, 404 Not Found                               |
+| DELETE | `/ratings/{id}` | Delete a rating       | 204 No Content, 404 Not Found                       |
 
 #### Rating Response Schema
 
