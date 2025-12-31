@@ -1,0 +1,295 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp}
+\else
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\IfFileExists{microtype.sty}{\usepackage[]{microtype}}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{%
+  \IfFileExists{parskip.sty}{\usepackage{parskip}}{\setlength{\parindent}{0pt}\setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{\KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage{longtable,booktabs,array}
+\usepackage{graphicx}
+\setlength{\emergencystretch}{3em}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{3}
+\usepackage{bookmark}
+\hypersetup{pdftitle={Movie Browsing API - Architecture Documentation}, hidelinks}
+
+\title{Movie Browsing API\\Architecture Documentation}
+\author{Software Architecture Team}
+\date{December 2025 - Version 1.0}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introduction and Goals}
+
+The Movie Browsing API is a RESTful web service providing comprehensive access to movie information, including films, actors, and ratings. This MVP serves as a backend for applications displaying and managing movie-related data.
+
+\subsection{Requirements Overview}
+
+\textbf{Core Features}: CRUD operations for movies, actors, and ratings; many-to-many movie-actor relationships; one-to-many movie-rating relationships; Richardson Maturity Model Level 2 compliance; embedded responses with full related data; SQLite persistence.
+
+\textbf{Key Endpoints}: /movies, /actors, /ratings with GET, POST, PUT, DELETE methods.
+
+\subsection{Quality Goals}
+
+\begin{enumerate}
+\item \textbf{Maintainability}: Layered architecture enables independent layer modification
+\item \textbf{RESTfulness}: Full RMM Level 2 compliance with proper HTTP verbs and status codes
+\item \textbf{Data Integrity}: Embedded responses, cascade deletes, Pydantic validation
+\item \textbf{Simplicity}: MVP approach, minimal complexity, straightforward patterns
+\item \textbf{Deployability}: Docker containerization, dev container support, reproducible builds
+\end{enumerate}
+
+\subsection{Stakeholders}
+
+Frontend Developers expect clean RESTful API with embedded data. Backend Developers need clear architecture and maintainable code. System Administrators require simple containerized deployment. Project Stakeholders want MVP delivery with extension potential.
+
+\section{Architecture Constraints}
+
+\textbf{Technical}: Python 3.12, FastAPI framework, SQLite database, Poetry dependency management, Docker containerization.
+
+\textbf{Organizational}: MVP approach, mandatory layered architecture (Database, Persistence, Business, API), no authentication in v1.0.
+
+\textbf{Conventions}: PEP 8 coding style, RESTful endpoints, Pydantic validation, SQLAlchemy ORM, camelCase JSON (firstName), snake\_case Python (first\_name).
+
+\section{Context and Scope}
+
+\subsection{Business Context}
+
+The API serves as a centralized movie data service. \textbf{Inputs}: HTTP requests for movie/actor data, rating submissions. \textbf{Outputs}: JSON responses with embedded relationships, resource IDs. \textbf{Partners}: Web/mobile apps, admin tools, data migration scripts.
+
+\subsection{Technical Context}
+
+\textbf{Interfaces}: REST over HTTP/1.1, JSON request/response, SQLite file protocol, OpenAPI 3.0 documentation.
+
+\textbf{Deployment}: Docker container on port 8000, Uvicorn ASGI server, SQLite (movies.db) in app root, VS Code dev container support.
+
+\section{Solution Strategy}
+
+\subsection{Technology Decisions}
+
+\begin{tabular}{lll}
+\textbf{Technology} & \textbf{Rationale} & \textbf{Quality Impact} \\
+\hline
+FastAPI & Auto docs, validation, async & Performance, Maintainability \\
+SQLAlchemy & DB abstraction, relationships & Maintainability, Portability \\
+Pydantic & Request/response validation & Data Integrity, Security \\
+SQLite & Zero config, file-based & Deployability, Simplicity \\
+Poetry & Modern dependency mgmt & Maintainability, Reliability \\
+\end{tabular}
+
+\subsection{Architectural Patterns}
+
+\textbf{Four-Layer Architecture}:
+\begin{enumerate}
+\item \textbf{API Layer}: FastAPI routes, Pydantic schemas, HTTP handling
+\item \textbf{Business Layer}: Service classes, business logic, data transformation
+\item \textbf{Persistence Layer}: Repository pattern, data access abstraction
+\item \textbf{Database Layer}: SQLAlchemy models, connection management
+\end{enumerate}
+
+Benefits: Single responsibility per layer, downward-only dependencies, isolated business logic, testable components.
+
+Figure~\ref{fig:architecture} illustrates the complete four-layer architecture with all components and their interactions.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.65\textwidth]{architecture_diagram.png}
+\caption{Four-Layer Architecture with Component Interactions}
+\label{fig:architecture}
+\end{figure}
+
+\section{Building Block View}
+
+\subsection{Level 1: System Overview}
+
+\begin{tabular}{ll}
+\textbf{Component} & \textbf{Responsibility} \\
+\hline
+API Layer & HTTP requests/responses, validation, formatting \\
+Business Layer & Business logic, orchestration, calculations \\
+Persistence Layer & Repository pattern, query abstraction \\
+Database Layer & Data models, connections, ORM \\
+\end{tabular}
+
+\subsection{Level 2: Key Components}
+
+\textbf{API Layer} (app/api/):
+\begin{itemize}
+\item routes/movies.py - Movie endpoints, embedded responses, average calculation
+\item routes/actors.py - Actor endpoints, fullName generation
+\item routes/ratings.py - Rating endpoints, score validation (0-10)
+\item schemas.py - Pydantic models with aliasing
+\end{itemize}
+
+\textbf{Business Layer} (app/business/services.py):
+\begin{itemize}
+\item MovieService - CRUD, average rating calculation, actor relationship management
+\item ActorService - Actor lifecycle management
+\item RatingService - Rating CRUD with movie validation
+\end{itemize}
+
+\textbf{Persistence Layer} (app/persistence/repositories.py):
+\begin{itemize}
+\item MovieRepository, ActorRepository, RatingRepository
+\item Common: get\_all(), get\_by\_id(), create(), update(), delete()
+\end{itemize}
+
+\textbf{Database Layer} (app/database/):
+\begin{itemize}
+\item models.py - Movie, Actor, Rating models; movie\_actors association table
+\item connection.py - Engine, session factory, database initialization
+\end{itemize}
+
+\section{Runtime View}
+
+\subsection{Create Movie Scenario}
+
+\begin{enumerate}
+\item POST /actors (×2) $\rightarrow$ Validate $\rightarrow$ ActorService $\rightarrow$ ActorRepository $\rightarrow$ 201 Created
+\item POST /movies with actorIds $\rightarrow$ Validate $\rightarrow$ MovieService retrieves actors $\rightarrow$ MovieRepository creates movie + relationships $\rightarrow$ 201 Created with embedded actors
+\item POST /ratings with movieId $\rightarrow$ Validate movie exists $\rightarrow$ RatingRepository creates $\rightarrow$ 201 Created
+\item GET /movies/\{id\} $\rightarrow$ MovieService loads with relationships $\rightarrow$ Calculate average $\rightarrow$ 200 OK with embedded actors and ratings
+\end{enumerate}
+
+\textbf{Key Aspects}: Layer separation maintained, dependency injection for sessions, embedded responses prevent N+1 queries, proper HTTP status codes throughout.
+
+\section{Deployment View}
+
+\textbf{Container Structure}:
+\begin{verbatim}
+Docker Container (python:3.12-slim)
+├── Uvicorn ASGI Server :8000
+│   └── FastAPI Application (4 layers)
+└── SQLite Database (movies.db)
+\end{verbatim}
+
+\textbf{Deployment Options}:
+\begin{enumerate}
+\item \textbf{Dev Container}: VS Code, auto-populated DB, hot-reload, port forwarding
+\item \textbf{Docker}: Build from Dockerfile, expose port 8000, run populate script
+\item \textbf{Local}: Poetry virtualenv, manual DB init, uvicorn --reload
+\end{enumerate}
+
+\textbf{Artifacts}: Dockerfile, pyproject.toml, app/ directory, scripts/populate\_data.py, .devcontainer/devcontainer.json
+
+\section{Cross-cutting Concepts}
+
+\subsection{Domain Model}
+
+\textbf{Movie} (Aggregate Root): Has many Ratings (cascade delete), has many Actors (independent), contains averageRating (calculated).
+
+\textbf{Actor} (Independent): Associated with multiple Movies, independent lifecycle.
+
+\textbf{Rating} (Value Object): Belongs to one Movie, deleted with parent.
+
+\subsection{Error Handling}
+
+200 OK (GET/PUT success), 201 Created (POST success), 204 No Content (DELETE success), 404 Not Found (resource missing), 422 Unprocessable Entity (validation failure), 500 Internal Server Error (unexpected errors).
+
+\subsection{Data Validation}
+
+Three layers: (1) Pydantic schema validation (types, formats, ranges), (2) Business validation (movie exists, actor IDs valid), (3) Database constraints (PK, FK, NOT NULL).
+
+\subsection{Data Transformation}
+
+API $\leftrightarrow$ Business: camelCase $\leftrightarrow$ snake\_case via Pydantic aliases. Business $\leftrightarrow$ Persistence: genre list $\leftrightarrow$ CSV string. Database $\rightarrow$ API: eager-loaded relationships, calculated fields.
+
+\section{Architecture Decisions}
+
+\subsection{ADR-001: Layered Architecture}
+
+\textbf{Decision}: Four-layer architecture (API, Business, Persistence, Database).
+
+\textbf{Rationale}: Single responsibility, downward dependencies, testability, framework independence.
+
+\textbf{Consequences}: (+) High maintainability, clear organization. (-) More boilerplate, transformations between layers.
+
+\subsection{ADR-002: SQLite Database}
+
+\textbf{Decision}: Use SQLite over PostgreSQL/MySQL.
+
+\textbf{Rationale}: Zero config, file-based, suitable for MVP, easy reset/populate.
+
+\textbf{Consequences}: (+) Simple deployment, fast dev. (-) Limited concurrency. Migration: SQLAlchemy enables easy PostgreSQL switch.
+
+\subsection{ADR-003: Embedded Responses}
+
+\textbf{Decision}: Return full embedded actors/ratings, not just IDs.
+
+\textbf{Rationale}: Fewer client requests, complete data, better UX.
+
+\textbf{Consequences}: (+) Better performance, simpler clients. (-) Larger payloads, not RMM Level 3.
+
+\subsection{ADR-004: Repository Pattern}
+
+\textbf{Decision}: Repository pattern for all data access.
+
+\textbf{Rationale}: Encapsulates queries, abstraction over ORM, easy mocking.
+
+\textbf{Consequences}: (+) Testability, maintainability. (-) Additional layer.
+
+\section{Quality Scenarios}
+
+\textbf{PS-1 Performance}: GET /movies (50 items) responds within 200ms with single DB query via eager loading.
+
+\textbf{MS-1 Maintainability}: Switch SQLite to PostgreSQL by modifying only connection.py, <1 hour effort.
+
+\textbf{US-1 Usability}: New developer accesses /docs, understands API, makes first successful call within 15 minutes.
+
+\textbf{RS-1 Reliability}: POST /ratings with score=15 returns 422 with clear error, no DB write.
+
+\textbf{SS-1 Security}: Malicious SQL in title field properly escaped by ORM, movie created safely.
+
+\section{Risks and Technical Debts}
+
+\subsection{Risks}
+
+\begin{tabular}{lll}
+\textbf{Priority} & \textbf{Risk} & \textbf{Mitigation} \\
+\hline
+High & SQLite concurrency limits & Document as dev DB, PostgreSQL migration path \\
+Medium & No authentication & Acceptable for MVP, JWT planned for v2 \\
+Medium & Large embedded responses & Monitor sizes, add pagination if needed \\
+\end{tabular}
+
+\subsection{Technical Debts}
+
+\begin{tabular}{ll}
+\textbf{Debt} & \textbf{Solution} \\
+\hline
+No unit/integration tests & Implement pytest suite, httpx TestClient \\
+No pagination & Add limit/offset parameters \\
+No filtering/search & Query params for genre/year/actor \\
+No CORS config & Add FastAPI CORS middleware \\
+Hardcoded paths & Environment variables \\
+No logging & Structured logging with levels \\
+No health check & /health endpoint with DB check \\
+\end{tabular}
+
+\section{Glossary}
+
+\textbf{API Layer}: HTTP handling via FastAPI routes and Pydantic schemas. \textbf{Business Layer}: Service classes with business logic. \textbf{Cascade Delete}: Auto-delete child records when parent deleted. \textbf{DTO}: Data Transfer Object (Pydantic models). \textbf{Eager Loading}: Load relationships in single query. \textbf{Embedded Response}: Full objects vs IDs in API responses. \textbf{MVP}: Minimum Viable Product. \textbf{N+1 Problem}: Separate query per related object. \textbf{ORM}: Object-Relational Mapping (SQLAlchemy). \textbf{Repository Pattern}: Data access encapsulation. \textbf{RMM Level 2}: Richardson Maturity Model - proper HTTP methods/status codes. \textbf{Session}: SQLAlchemy DB connection manager.
+
+\end{document}

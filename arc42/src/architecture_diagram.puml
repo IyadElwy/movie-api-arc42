@@ -1,0 +1,59 @@
+@startuml Movie API Architecture
+
+skinparam componentStyle rectangle
+skinparam backgroundColor white
+skinparam roundcorner 10
+
+title Movie Browsing API - Layered Architecture
+
+actor "Client" as Client
+
+package "API Layer" #FFE0B2 {
+    component "FastAPI Routes\nPydantic Schemas" as API
+}
+
+package "Business Layer" #BBDEFB {
+    component "Services\n(Movie, Actor, Rating)" as Business
+}
+
+package "Persistence Layer" #C8E6C9 {
+    component "Repositories\n(Movie, Actor, Rating)" as Persistence
+}
+
+package "Database Layer" #FFF9C4 {
+    component "SQLAlchemy ORM\nConnection Manager" as Database
+}
+
+database "SQLite\n(movies.db)" as SQLite #E1BEE7
+
+Client -down-> API : HTTP/JSON\n(Port 8000)
+API -down-> Business : DTOs
+Business -down-> Persistence : Domain Objects
+Persistence -down-> Database : ORM Operations
+Database -down-> SQLite : SQL Queries
+
+note right of API
+  • Movie/Actor/Rating Routes
+  • Request/Response Validation
+  • HTTP Status Codes
+end note
+
+note right of Business
+  • Business Logic
+  • Average Calculations
+  • Relationship Management
+end note
+
+note right of Persistence
+  • Repository Pattern
+  • CRUD Operations
+  • Query Abstraction
+end note
+
+note right of Database
+  • Models (Movie, Actor, Rating)
+  • Relationships (M:N, 1:N)
+  • Session Management
+end note
+
+@enduml
