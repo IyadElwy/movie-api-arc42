@@ -1,6 +1,6 @@
 from datetime import date
 from typing import List, Optional
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator, computed_field
 
 
 class ActorReference(BaseModel):
@@ -45,7 +45,11 @@ class ActorUpdate(BaseModel):
 
 class ActorResponse(ActorBase):
     id: int
-    full_name: str = Field(alias="fullName")
+
+    @computed_field(alias="fullName")
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
 
     class Config:
         populate_by_name = True
@@ -127,7 +131,21 @@ class MovieResponse(MovieBase):
     id: int
     actors: List[ActorResponse]
     ratings: List[RatingResponse]
-    average_rating: Optional[float] = Field(None, alias="averageRating")
+
+    @field_validator('genres', mode='before')
+    @classmethod
+    def convert_genres_string(cls, v):
+        """Convert comma-separated string to list if needed"""
+        if isinstance(v, str):
+            return [genre.strip() for genre in v.split(',') if genre.strip()]
+        return v
+
+    @computed_field(alias="averageRating")
+    @property
+    def average_rating(self) -> Optional[float]:
+        if not self.ratings:
+            return None
+        return round(sum(rating.score for rating in self.ratings) / len(self.ratings), 2)
 
     class Config:
         populate_by_name = True
